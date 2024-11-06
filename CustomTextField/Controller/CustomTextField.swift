@@ -15,6 +15,8 @@ enum ValidState{
 
 final class CustomTextField: UITextField {
     
+    private var timer = Timer()
+    private let loginName = ["Like", "Saadet", "Anna"]
     
     private var textFieldState: ValidState = .start {
         didSet {
@@ -22,9 +24,14 @@ final class CustomTextField: UITextField {
             case .start:
                 rightView = nil
             case .loading:
-                print("loading")
+                rightViewLoadingConfigure()
             case .result:
-                print("result")
+                if loginName.contains(text ?? "") {
+                    rightImageViewConfigure(imageName: "checkmark.seal.fill", tintColor: .green)
+                }
+                else{
+                    rightImageViewConfigure(imageName: "multiply.circle", tintColor: .red)
+                }
             }
         }
     }
@@ -33,8 +40,10 @@ final class CustomTextField: UITextField {
         super.init(frame: frame)
         
         configure()
+        delegate = self
         leftImageViewConfigure()
-        rightViewLoadingConfigure()
+        
+        
     }
     
     required init?(coder: NSCoder) {
@@ -48,6 +57,8 @@ final class CustomTextField: UITextField {
     override func rightViewRect(forBounds bounds: CGRect) -> CGRect {
         CGRect(x: frame.width - 40, y: 0, width: 40, height: frame.height)
     }
+    
+//MARK: - Configuration
     
     func configure(){
         borderStyle = .roundedRect
@@ -82,5 +93,44 @@ final class CustomTextField: UITextField {
         rightView = rightValidView
     }
     
+    @objc private func stopTyping(){
+        textFieldState = .loading
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+            self.textFieldState = .result
+        })
+    }
     
+    private func rightImageViewConfigure(imageName: String, tintColor: UIColor){
+        let rightImageView = UIImageView()
+        rightImageView.contentMode = .center
+        rightImageView.tintColor = tintColor
+        rightImageView.image = UIImage(systemName: imageName)
+        rightView = rightImageView
+    }
+    
+    
+}
+
+//MARK: - Textfield Delegate
+
+extension CustomTextField: UITextFieldDelegate {
+    
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        timer.invalidate()
+        
+        guard let text, let textRange = Range(range, in: text) else { return true } // her harfte kontrol ediyor
+        let updateText = text.replacingCharacters(in: textRange, with: string)
+      //  print(updateText)
+        if updateText.isEmpty {
+            textFieldState = .start
+            return true
+        }
+        
+        timer = Timer.scheduledTimer(timeInterval: 0.5,
+                                     target: self,
+                                     selector: #selector(stopTyping),
+                                     userInfo: nil,
+                                     repeats: false)
+        return true
+    }
 }
