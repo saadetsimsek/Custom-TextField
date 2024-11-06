@@ -15,6 +15,7 @@ enum ValidState{
 
 final class CustomTextField: UITextField {
     
+    
     private var textFieldState: ValidState = .start {
         didSet {
             switch textFieldState {
@@ -33,10 +34,19 @@ final class CustomTextField: UITextField {
         
         configure()
         leftImageViewConfigure()
+        rightViewLoadingConfigure()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func leftViewRect(forBounds bounds: CGRect) -> CGRect {
+        CGRect(x: 0, y: 0, width: 40, height: frame.height)
+    }
+    
+    override func rightViewRect(forBounds bounds: CGRect) -> CGRect {
+        CGRect(x: frame.width - 40, y: 0, width: 40, height: frame.height)
     }
     
     func configure(){
@@ -59,8 +69,18 @@ final class CustomTextField: UITextField {
     private func leftImageViewConfigure(){
         let leftImageView = UIImageView()
         leftImageView.contentMode = .center
-        leftImageView.image = UIImage(systemName: "person")
+        leftImageView.image = UIImage(systemName: "person")?.drawLinearGradient(colors: [.red, .blue],
+                                                                                startPoint: .init(x: 0, y: 0),
+                                                                                endPoint: .init(x: 5, y: 40))
         leftView = leftImageView
     }
+    
+    private func rightViewLoadingConfigure(){
+        let rightValidView = UIActivityIndicatorView()
+        rightValidView.startAnimating()
+        rightValidView.color = .lightGray
+        rightView = rightValidView
+    }
+    
     
 }
